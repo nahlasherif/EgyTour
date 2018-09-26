@@ -4,6 +4,10 @@
     <string name="hint_email">Email</string>
     <string name="hint_password">Password</string>
     <string name="hint_name">Fullname</string>
+    <string name="hint_age">Age</string>
+    <string name="hint_nationality">Nationality</string>
+    <string name="hint_number">Phone Number</string>
+
     <string name="btn_login">LOGIN</string>
     <string name="btn_register">REGISTER</string>
     <string name="btn_link_to_register">Not a member? Sign up now.</string>

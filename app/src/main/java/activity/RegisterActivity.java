@@ -34,6 +34,9 @@ public class RegisterActivity extends Activity {
     private EditText inputFullName;
     private EditText inputEmail;
     private EditText inputPassword;
+    private EditText inputAge;
+    private EditText inputNationality;
+    private EditText inputNumber;
     private ProgressDialog pDialog;
     private SessionManager session;
     private SQLiteHandler db;
@@ -46,6 +49,9 @@ public class RegisterActivity extends Activity {
         inputFullName = (EditText) findViewById(R.id.name);
         inputEmail = (EditText) findViewById(R.id.email);
         inputPassword = (EditText) findViewById(R.id.password);
+        inputAge = (EditText) findViewById(R.id.age);
+        inputNationality = (EditText) findViewById(R.id.nationality);
+        inputNumber = (EditText) findViewById(R.id.number);
         btnRegister = (Button) findViewById(R.id.btnRegister);
         btnLinkToLogin = (Button) findViewById(R.id.btnLinkToLoginScreen);
 
@@ -74,9 +80,14 @@ public class RegisterActivity extends Activity {
                 String name = inputFullName.getText().toString().trim();
                 String email = inputEmail.getText().toString().trim();
                 String password = inputPassword.getText().toString().trim();
+                String age = inputAge.getText().toString().trim();
+                String nationality = inputNationality.getText().toString().trim();
+                String number = inputNumber.getText().toString().trim();
 
-                if (!name.isEmpty() && !email.isEmpty() && !password.isEmpty()) {
-                    registerUser(name, email, password);
+                if (!name.isEmpty() && !email.isEmpty() && !password.isEmpty()
+                        && !age.isEmpty() && !nationality.isEmpty() && !number.isEmpty()) {
+                    registerUser(name, email, password, age, nationality, number);
+
                 } else {
                     Toast.makeText(getApplicationContext(),
                             "Please enter your details!", Toast.LENGTH_LONG)
@@ -103,7 +114,7 @@ public class RegisterActivity extends Activity {
      * email, password) to register url
      * */
     private void registerUser(final String name, final String email,
-                              final String password) {
+                              final String password, final String age, final String nationality, final String number) {
         // Tag used to cancel the request
         String tag_string_req = "req_register";
 
@@ -174,6 +185,9 @@ public class RegisterActivity extends Activity {
                 params.put("name", name);
                 params.put("email", email);
                 params.put("password", password);
+                params.put("age", age);
+                params.put("nationality", nationality);
+                params.put("number", number);
 
                 return params;
             }
