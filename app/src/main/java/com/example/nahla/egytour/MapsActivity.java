@@ -1,6 +1,7 @@
 package com.example.nahla.egytour;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
@@ -30,19 +31,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LocationManager locationManager;
     String provider;
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+    public LatLng place;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        provider = locationManager.getBestProvider(new Criteria(), false);
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        provider = locationManager.getBestProvider(new Criteria(), false);
+
+        Intent i = getIntent();
+        String selectedlat = i.getStringExtra("selectedlat");
+        String selectedlon = i.getStringExtra("selectedlon");
+
+        if(selectedlat!=null && selectedlon!=null){
+            place = new LatLng(Double.parseDouble(selectedlat),Double.parseDouble(selectedlon));
+        }
     }
 
 
@@ -58,10 +67,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        if(place!=null) {
+            mMap.addMarker(new MarkerOptions().position(place).title("Marker placed"));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place,15));
+            mMap.animateCamera(CameraUpdateFactory.zoomIn());
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
+        }
         // Add a marker in Sydney and move the camera
-        LatLng cairo = new LatLng(30,31);
-       mMap.addMarker(new MarkerOptions().position(cairo).title("Marker in Cairo"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(cairo));
+       // LatLng cairo = new LatLng(30,31);
+      // mMap.addMarker(new MarkerOptions().position(cairo).title("Marker in Cairo"));
+      //  mMap.moveCamera(CameraUpdateFactory.newLatLng(cairo));
 
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
@@ -111,5 +126,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMyLocationClick(@NonNull Location location) {
         Toast.makeText(this, "Current location:\n" + location, Toast.LENGTH_LONG).show();
+
+        ////////////////////////////////////////////////////////////////////
     }
 }
