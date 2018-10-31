@@ -8,7 +8,7 @@ public class LandMarks {
     double Lat;
     double Lon;
 
-    public LandMarks(String name, double rating, double distance, double Lat, double Lon) {
+    public LandMarks(String name, double rating, double distance, double Lat, double Lon, String imgurl) {
         this.name = name;
         this.rating = rating;
         this.distance = distance;

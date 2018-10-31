@@ -1,6 +1,7 @@
 package activity;
 
 import app.AppConfig;
+import app.CustomAdapter;
 import app.LandMarks;
 import helper.SQLiteHandler;
 import helper.SessionManager;
@@ -15,13 +16,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -42,9 +41,6 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.nahla.egytour.MapsActivity;
 import com.example.nahla.egytour.R;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationServices;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -52,7 +48,8 @@ import org.json.JSONObject;
 
 import static com.example.nahla.egytour.MapsActivity.MY_PERMISSIONS_REQUEST_LOCATION;
 
-public class MainActivity extends Activity  {
+public class MainActivity extends Activity {
+    private LocationManager locationManager;
     private TextView txtName;
     private Button btnLogout;
     private Button btnLocation;
@@ -64,57 +61,43 @@ public class MainActivity extends Activity  {
     private Double lon;
     private LocationListener listener;
     private ArrayList<LandMarks> lm;
-    private ArrayAdapter adapter;
-    private ArrayList<String> land;
+    private CustomAdapter adapter;
+    private ArrayList<LandMarks> land;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        dropdown = findViewById(R.id.spinner);
+        dropdown = (Spinner) findViewById(R.id.spinner);
         txtName = (TextView) findViewById(R.id.name);
         btnLogout = (Button) findViewById(R.id.btnLogout);
         btnLocation = (Button) findViewById(R.id.location);
         nearby = (ListView) findViewById(R.id.nearby);
-        nearby.setAdapter(adapter);
         lm = new ArrayList<LandMarks>();
 
         nearby.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String selectedstring = land.get(position);
-                String[] splitted = selectedstring.split(",");
-                Double selectedlat = 0.0;
-                Double selectedlon = 0.0;
-                Log.i("selectedname",splitted[0]);
-                for(int i = 0; i<lm.size();i++){
-                    if(lm.get(i).getName().equalsIgnoreCase(splitted[0])){
-                        Log.i("nameeee",lm.get(i).getName());
-                        selectedlat = lm.get(i).getLat();
-                        selectedlon = lm.get(i).getLon();
-                        break;
-                    }
-                }
+                Double selectedlat = land.get(position).getLat();
+                Double selectedlon = land.get(position).getLon();
                 Intent intent = new Intent(MainActivity.this, MapsActivity.class);
-           //     Bundle mBundle = new Bundle();
-                Log.i("selectedlatmain",selectedlat+"");
-                intent.putExtra("selectedlat", selectedlat+ "");
-                intent.putExtra("selectedlon", selectedlon+ "");
+                intent.putExtra("selectedlat", selectedlat + "");
+                intent.putExtra("selectedlon", selectedlon + "");
                 startActivity(intent);
                 finish();
             }
         });
 
-        final LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         listener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
                 String s = location.getLatitude() + " " + location.getLongitude();
                 lat = location.getLatitude();
                 lon = location.getLongitude();
-                Log.i("locaaation", s);
             }
+
             @Override
             public void onStatusChanged(String s, int i, Bundle bundle) {
             }
@@ -128,15 +111,11 @@ public class MainActivity extends Activity  {
             }
         };
 
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    MY_PERMISSIONS_REQUEST_LOCATION);
-        }
-        else {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_LOCATION);
+        } else {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 0, listener);
             Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            locationManager.requestLocationUpdates("gps", 5000, 0, listener);
             lat = location.getLatitude();
             lon = location.getLongitude();
             loadList();
@@ -150,17 +129,17 @@ public class MainActivity extends Activity  {
         dropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                switch(position){
+                switch (position) {
                     case 0:
                         land = sortByDistance();
-                        adapter = new ArrayAdapter(MainActivity.this, android.R.layout.simple_list_item_1, land);
+                        adapter = new CustomAdapter(MainActivity.this, land);
                         nearby.setAdapter(adapter);
                         adapter.notifyDataSetChanged();
                         break;
 
                     case 1:
                         land = sortByRate();
-                        adapter = new ArrayAdapter(MainActivity.this, android.R.layout.simple_list_item_1, land);
+                        adapter = new CustomAdapter(MainActivity.this, land);
                         nearby.setAdapter(adapter);
                         adapter.notifyDataSetChanged();
                         break;
@@ -231,7 +210,7 @@ public class MainActivity extends Activity  {
                                 Double Latitude = jo.getDouble("Latitude");
                                 Double Longitude = jo.getDouble("Longitude");
                                 Double Rating = jo.getDouble("Rating");
-                               // String imgurl = jo.getString("Image Path");
+                                String imgurl = jo.getString("ImagePath");
 
                                 Location startPoint = new Location("locationA");
 
@@ -244,16 +223,13 @@ public class MainActivity extends Activity  {
                                 endPoint.setLatitude(Latitude);
                                 endPoint.setLongitude(Longitude);
 
-                                Log.i("current location", lat + "" + lon);
-
                                 double distance = startPoint.distanceTo(endPoint);
-                                LandMarks lo = new LandMarks(name, Rating, distance,Latitude,Longitude);
+                                LandMarks lo = new LandMarks(name, Rating, distance, Latitude, Longitude, imgurl);
                                 lm.add(lo);
-                              //  stringlist.add(name + " , " + Rating + " , " + String.format("%.2f", distance / 1000) + " km");
-
                             }
+
                             land = sortByDistance();
-                            adapter = new ArrayAdapter(MainActivity.this, android.R.layout.simple_list_item_1, land);
+                            adapter = new CustomAdapter(MainActivity.this, land);
                             nearby.setAdapter(adapter);
                             adapter.notifyDataSetChanged();
 
@@ -265,7 +241,7 @@ public class MainActivity extends Activity  {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        //displaying the error in toast if occurrs
+                        //displaying the error in toast if occurs
                         Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -274,8 +250,7 @@ public class MainActivity extends Activity  {
         requestQueue.add(stringRequest);
     }
 
-    public ArrayList<String> sortByRate() {
-        ArrayList<String> sorted = new ArrayList<String>();
+    public ArrayList<LandMarks> sortByRate() {
         Collections.sort(lm, new Comparator<LandMarks>() {
             public int compare(LandMarks p1, LandMarks p2) {
                 if (p1.getRating() > p2.getRating()) return -1;
@@ -285,14 +260,11 @@ public class MainActivity extends Activity  {
         });
         for (int i = 0; i < lm.size(); i++) {
             LandMarks l = lm.get(i);
-            String s = l.getName() + "," + l.getRating() + "," + String.format("%.2f", l.getDistance() / 1000) + " km";
-            sorted.add(s);
         }
-        return sorted;
+        return lm;
     }
 
-    public ArrayList<String> sortByDistance() {
-        ArrayList<String> sorted = new ArrayList<String>();
+    public ArrayList<LandMarks> sortByDistance() {
         Collections.sort(lm, new Comparator<LandMarks>() {
             public int compare(LandMarks p1, LandMarks p2) {
                 if (p1.getDistance() < p2.getDistance()) return -1;
@@ -302,9 +274,19 @@ public class MainActivity extends Activity  {
         });
         for (int i = 0; i < lm.size(); i++) {
             LandMarks l = lm.get(i);
-            String s = l.getName() + "," + l.getRating() + "," + String.format("%.2f", l.getDistance() / 1000) + " km";
-            sorted.add(s);
         }
-        return sorted;
+        return lm;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        }
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 0, listener);
+        Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        lat = location.getLatitude();
+        lon = location.getLongitude();
+        loadList();
     }
 }
