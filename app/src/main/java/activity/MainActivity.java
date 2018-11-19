@@ -39,6 +39,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.nahla.egytour.DetailActivity;
 import com.example.nahla.egytour.MapsActivity;
 import com.example.nahla.egytour.R;
 
@@ -81,9 +82,18 @@ public class MainActivity extends Activity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Double selectedlat = land.get(position).getLat();
                 Double selectedlon = land.get(position).getLon();
-                Intent intent = new Intent(MainActivity.this, MapsActivity.class);
+                LandMarks current = land.get(position);
+
+                Intent intent = new Intent(MainActivity.this, DetailActivity.class);
                 intent.putExtra("selectedlat", selectedlat + "");
                 intent.putExtra("selectedlon", selectedlon + "");
+                intent.putExtra("Name", current.getName());
+                intent.putExtra("Logo", current.getImgurl());
+                intent.putExtra("Phone", current.getPhoneNumber());
+                intent.putExtra("Distance", (String.format("%.2f", current.getDistance() / 1000) + " km"));
+                intent.putExtra("Rating", current.getRating()+"");
+
+                intent.putExtra("Reviews", current.getReviews());
                 startActivity(intent);
                 finish();
             }
@@ -162,11 +172,11 @@ public class MainActivity extends Activity {
 
         // Fetching user details from sqlite
         HashMap<String, String> user = db.getUserDetails();
-        String name = user.get("name");
+        String username = user.get("name");
         String email = user.get("email");
 
         // Displaying the user details on the screen
-        txtName.setText("Welcome, " + name + "!");
+        txtName.setText("Welcome, " + username + "!");
 
         // Logout button click event
         btnLocation.setOnClickListener(new View.OnClickListener() {
@@ -211,6 +221,8 @@ public class MainActivity extends Activity {
                                 Double Longitude = jo.getDouble("Longitude");
                                 Double Rating = jo.getDouble("Rating");
                                 String imgurl = jo.getString("ImagePath");
+                                String PhoneNumber = jo.getString("PhoneNumber");
+                                String Reviews = jo.getString("Reviews");
 
                                 Location startPoint = new Location("locationA");
 
@@ -224,7 +236,7 @@ public class MainActivity extends Activity {
                                 endPoint.setLongitude(Longitude);
 
                                 double distance = startPoint.distanceTo(endPoint);
-                                LandMarks lo = new LandMarks(name, Rating, distance, Latitude, Longitude, imgurl);
+                                LandMarks lo = new LandMarks(name, Rating, distance, Latitude, Longitude, imgurl, PhoneNumber, Reviews);
                                 lm.add(lo);
                             }
 

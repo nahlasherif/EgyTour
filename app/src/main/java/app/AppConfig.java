@@ -11,4 +11,6 @@ public class AppConfig {
     // Server user retrieve url
     public static String URL_RETRIEVE = "http://192.168.43.241/android_login_api/Retrieve.php";
 
+    public static String URL_ADD = "http://192.168.43.241/android_login_api/Add.php";
+
 }
